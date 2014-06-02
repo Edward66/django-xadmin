@@ -104,17 +104,17 @@ class ReversionPlugin(BaseAdminPlugin):
         """Returns all the instances to be used in the object's revision."""
         return [obj]
 
-    def get_revision_data(self, obj, flag):
+    def get_revision_data(self, obj):
         """Returns all the revision data to be used in the object's revision."""
         return dict(
             (o, self.revision_manager.get_adapter(
-                o.__class__).get_version_data(o, flag))
+                o.__class__).get_version_data(o))
             for o in self.get_revision_instances(obj)
         )
 
-    def save_revision(self, obj, tag, comment):
+    def save_revision(self, obj, comment):
         self.revision_manager.save_revision(
-            self.get_revision_data(obj, tag),
+            self.get_revision_data(obj),
             user=self.user,
             comment=comment,
             ignore_duplicates=self.ignore_duplicate_revisions,
@@ -144,21 +144,22 @@ class ReversionPlugin(BaseAdminPlugin):
     def post(self, __, request, *args, **kwargs):
         return self.revision_context_manager.create_revision(manage_manually=False)(self.do_post(__))()
 
-    # def save_models(self, __):
-    #     self.revision_context_manager.create_revision(manage_manually=True)(__)()
+    def save_models(self, __):
+        self.revision_context_manager.create_revision(manage_manually=True)(__)()
 
-    #     if self.admin_view.org_obj is None:
-    #         self.save_revision(self.admin_view.new_obj, VERSION_ADD, _(u"Initial version."))
-    #     else:
-    #         self.save_revision(self.admin_view.new_obj, VERSION_CHANGE, _(u"Change version."))
+        if self.admin_view.org_obj is None:
+            self.save_revision(self.admin_view.new_obj, _(u"Initial version."))
+        else:
+            self.save_revision(self.admin_view.new_obj, _(u"Change version."))
 
-    # def save_related(self, __):
-    #     self.revision_context_manager.create_revision(manage_manually=True)(__)()
+    #def save_related(self, __):
+        #self.revision_context_manager.create_revision(manage_manually=True)(__)()
 
-    # def delete_model(self, __):
-    #     self.save_revision(self.admin_view.obj, VERSION_DELETE, \
-    #         _(u"Deleted %(verbose_name)s.") % {"verbose_name": self.opts.verbose_name})
-    #     self.revision_context_manager.create_revision(manage_manually=True)(__)()
+    #def delete_model(self, __):
+        #self.save_revision(
+            #self.admin_view.obj,
+            #_(u"Deleted %(verbose_name)s.") % {"verbose_name": self.opts.verbose_name})
+        #self.revision_context_manager.create_revision(manage_manually=True)(__)()
 
     # Block Views
     def block_top_toolbar(self, context, nodes):
